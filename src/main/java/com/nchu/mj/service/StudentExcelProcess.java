@@ -1,10 +1,9 @@
-package com.nchu.mj.service.impl;
+package com.nchu.mj.service;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,13 +19,21 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 
+/**
+ * 学生信息 Excel 处理器
+ * StudentExcelProcess.build().process(anyFileStream)
+ */
 public class StudentExcelProcess {
     private Student readhead = new Student("0", "", "");
     private List<Student> list = new ArrayList<>();
 
-    public OutputStream process(InputStream fileStream) throws IOException {
-        readHead(fileStream);
-        readExcel(fileStream);
+    public static StudentExcelProcess build() {
+        return new StudentExcelProcess();
+    }
+
+    public byte[] process(byte[] fileBytes) throws IOException {
+        readHead(fileBytes);
+        readExcel(fileBytes);
         dealData(list);
         calculate();
         return createExcel();
@@ -35,7 +42,7 @@ public class StudentExcelProcess {
     /**
      * 生成Excel
      */
-    private OutputStream createExcel() throws IOException {
+    private byte[] createExcel() throws IOException {
         //创建课程序列号累计
         // 创建一个Excel文件
         HSSFWorkbook workbook = new HSSFWorkbook();
@@ -161,16 +168,16 @@ public class StudentExcelProcess {
         }
 
         // 保存Excel文件
-        OutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
         workbook.write(out);
-        return out;
+        return out.toByteArray();
     }
 
     /**
      * 读取Excel的头
      */
-    private void readHead(InputStream is) {
-        HSSFSheet hssfSheet = initWorkBook(is);
+    private void readHead(byte[] fileBytes) {
+        HSSFSheet hssfSheet = initWorkBook(fileBytes);
         //读取头
         // 将单元格中的内容存入集合
         HSSFRow hssfRow0 = hssfSheet.getRow(0);
@@ -203,8 +210,8 @@ public class StudentExcelProcess {
     /**
      * 读取Excel
      */
-    private void readExcel(InputStream is) {
-        HSSFSheet hssfSheet = initWorkBook(is);
+    private void readExcel(byte[] fileBytes) {
+        HSSFSheet hssfSheet = initWorkBook(fileBytes);
         //读取头
         // 将单元格中的内容存入集合
         for (int rowNum = 1; rowNum < hssfSheet.getLastRowNum(); rowNum++) {
@@ -277,10 +284,10 @@ public class StudentExcelProcess {
         }
     }
 
-    private HSSFSheet initWorkBook(InputStream is) {
+    private HSSFSheet initWorkBook(byte[] fileBytes) {
         HSSFWorkbook workbook = null;
         try {
-            workbook = new HSSFWorkbook(is);
+            workbook = new HSSFWorkbook(new ByteArrayInputStream(fileBytes));
         } catch (Exception e) {
             e.printStackTrace();
         }
