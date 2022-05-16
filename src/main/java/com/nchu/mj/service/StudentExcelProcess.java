@@ -32,12 +32,35 @@ public class StudentExcelProcess {
 
     public byte[] process(byte[] fileBytes) throws IOException {
         readHead(fileBytes);
+
         readExcel(fileBytes);
         dealData(list);
         calculate();
         return createExcel();
     }
 
+    /**@param aimList 课程目标的列表，把所有作业的课程目标都放在里面，里面有很多重复项
+     * @param weightList 对应课程目标权重的列表。
+     * @param aimNumber 给每次作业设置课程目标个数，比如:第一次作业有3个课程目标，则aimNumber.add(3);
+     * */
+    public byte[] process(byte[] fileBytes,List<Integer> aimNumber,List<String> aimList ,List<Double> weightList ) throws IOException {
+        readHead(fileBytes);
+        int index = 0;
+        for (int i = 0; i < readhead.getGrade().size(); i++) {
+            //遍历课程目标个数，从第一个作业开始，访问它的课程目标数。
+            for (int k = 0; k < aimNumber.get(i); k++) {
+                String aim = aimList.get(index);
+                double weight = weightList.get(index);
+                System.out.println(aim + "\t" + weight);
+                index++;
+                setWeight(readhead.getGrade().get(i).getClassName(), aim, weight);
+            }
+        }
+        readExcel(fileBytes);
+        dealData(list);
+        calculate();
+        return createExcel();
+    }
     /**
      * 生成Excel
      */
@@ -59,7 +82,6 @@ public class StudentExcelProcess {
 
         //        HSSFCellStyle cellStyle = workbook.createCellStyle();
         //课程序列需要循环，需要一定制空
-        //多少个课
         int tempCol = 2;
         for (int i = 0; i < readhead.getGrade().size(); i++) {
             tempCol += readhead.getGrade().get(i).getWeigth().size();

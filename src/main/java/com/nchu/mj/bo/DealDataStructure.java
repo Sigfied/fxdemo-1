@@ -1,5 +1,8 @@
 package com.nchu.mj.bo;
 
+/**
+ * @author FLZ
+ */
 public class DealDataStructure {
     public String className;
     public String aim;
