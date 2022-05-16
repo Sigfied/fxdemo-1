@@ -10,6 +10,7 @@ import java.util.Map;
 import com.nchu.mj.bo.DealDataStructure;
 import com.nchu.mj.bo.Grade;
 import com.nchu.mj.bo.Student;
+import com.nchu.mj.bo.StudentExcelProcessOptions;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFRow;
@@ -30,20 +31,34 @@ public class StudentExcelProcess {
         return new StudentExcelProcess();
     }
 
-    public byte[] process(byte[] fileBytes) throws IOException {
+    public byte[] process(byte[] fileBytes, List<StudentExcelProcessOptions> optionsList) throws IOException {
         readHead(fileBytes);
-
+        for (int i = 0; i < readhead.getGrade().size(); i++) {
+            //遍历课程目标个数，从第一个作业开始，访问它的课程目标数。
+            int finalI = i;
+            StudentExcelProcessOptions matchOptions = optionsList.stream()
+                .filter(options -> options.getCourseForExcelIndex().equals(finalI))
+                .findFirst().orElseThrow(() -> new RuntimeException("配置不合法，表头第" + finalI + "列没有配置覆盖"));
+            for (int k = 0; k < matchOptions.getCourseGoalNumber(); k++) {
+                String aim = matchOptions.getCourseGoalOptionsList().get(k).getAim();
+                double weight = matchOptions.getCourseGoalOptionsList().get(k).getWeight();
+                System.out.println(aim + "\t" + weight);
+                setWeight(readhead.getGrade().get(i).getClassName(), aim, weight);
+            }
+        }
         readExcel(fileBytes);
         dealData(list);
         calculate();
         return createExcel();
     }
 
-    /**@param aimList 课程目标的列表，把所有作业的课程目标都放在里面，里面有很多重复项
+    /**
+     * @param aimList    课程目标的列表，把所有作业的课程目标都放在里面，里面有很多重复项
      * @param weightList 对应课程目标权重的列表。
-     * @param aimNumber 给每次作业设置课程目标个数，比如:第一次作业有3个课程目标，则aimNumber.add(3);
-     * */
-    public byte[] process(byte[] fileBytes,List<Integer> aimNumber,List<String> aimList ,List<Double> weightList ) throws IOException {
+     * @param aimNumber  给每次作业设置课程目标个数，比如:第一次作业有3个课程目标，则aimNumber.add(3);
+     */
+    public byte[] process(byte[] fileBytes, List<Integer> aimNumber, List<String> aimList, List<Double> weightList)
+        throws IOException {
         readHead(fileBytes);
         int index = 0;
         for (int i = 0; i < readhead.getGrade().size(); i++) {
@@ -61,6 +76,7 @@ public class StudentExcelProcess {
         calculate();
         return createExcel();
     }
+
     /**
      * 生成Excel
      */

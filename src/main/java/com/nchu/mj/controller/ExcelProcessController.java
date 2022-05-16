@@ -3,6 +3,9 @@ package com.nchu.mj.controller;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
+import com.alibaba.fastjson.JSON;
+
+import com.nchu.mj.bo.StudentExcelProcessOptions;
 import com.nchu.mj.service.StudentExcelProcess;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -23,9 +26,11 @@ import org.springframework.web.multipart.MultipartFile;
 public class ExcelProcessController {
 
     @PostMapping("/excel/process")
-    public ResponseEntity<Resource> excelProcess(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Resource> excelProcess(@RequestParam("file") MultipartFile file,
+        @RequestParam("options") String optionsJson) {
         try {
-            byte[] bytes = StudentExcelProcess.build().process(file.getBytes());
+            byte[] bytes = StudentExcelProcess.build().process(file.getBytes(),
+                JSON.parseArray(optionsJson, StudentExcelProcessOptions.class));
             HttpHeaders headers = new HttpHeaders();
             headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
             headers.add("Content-Disposition", String.format("attachment; filename=\"%s\"", "student_out.xls"));
