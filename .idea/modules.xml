@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/fxdemo.iml" filepath="$PROJECT_DIR$/fxdemo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/excel-process-app.iml" filepath="$PROJECT_DIR$/excel-process-app.iml" />
     </modules>
   </component>
 </project>

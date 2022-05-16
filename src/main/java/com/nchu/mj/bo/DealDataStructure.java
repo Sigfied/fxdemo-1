@@ -1,4 +1,4 @@
-package com.example.fxdemo.process;
+package com.nchu.mj.bo;
 
 public class DealDataStructure {
     public String className;

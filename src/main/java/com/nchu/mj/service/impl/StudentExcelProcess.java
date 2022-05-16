@@ -1,13 +1,17 @@
-package com.example.fxdemo.process;
+package com.nchu.mj.service.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.nchu.mj.bo.DealDataStructure;
+import com.nchu.mj.bo.Grade;
+import com.nchu.mj.bo.Student;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFRow;
@@ -16,24 +20,22 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 
-public class Process {
-    private static String filePath = "/Users/yunjing/Desktop/fxdemo-1/src/main/resources/test/example_input.xls";
-    static Student readhead = new Student("0", "", "");
-    private static List<Student> list = new ArrayList<>();
+public class StudentExcelProcess {
+    private Student readhead = new Student("0", "", "");
+    private List<Student> list = new ArrayList<>();
 
-    public static void main(String[] args) {
-        readHead(filePath);
-        readExcel(filePath);
+    public OutputStream process(InputStream fileStream) throws IOException {
+        readHead(fileStream);
+        readExcel(fileStream);
         dealData(list);
         calculate();
-        createExcel();
+        return createExcel();
     }
-
 
     /**
      * 生成Excel
      */
-    private static void createExcel() {
+    private OutputStream createExcel() throws IOException {
         //创建课程序列号累计
         // 创建一个Excel文件
         HSSFWorkbook workbook = new HSSFWorkbook();
@@ -159,20 +161,16 @@ public class Process {
         }
 
         // 保存Excel文件
-        try {
-            OutputStream outputStream = new FileOutputStream("students_new_s.xls");
-            workbook.write(outputStream);
-            outputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        OutputStream out = new ByteArrayOutputStream();
+        workbook.write(out);
+        return out;
     }
 
     /**
      * 读取Excel的头
      */
-    private static void readHead(String filePath) {
-        HSSFSheet hssfSheet = initWorkBook(filePath);
+    private void readHead(InputStream is) {
+        HSSFSheet hssfSheet = initWorkBook(is);
         //读取头
         // 将单元格中的内容存入集合
         HSSFRow hssfRow0 = hssfSheet.getRow(0);
@@ -205,8 +203,8 @@ public class Process {
     /**
      * 读取Excel
      */
-    private static void readExcel(String filePath) {
-        HSSFSheet hssfSheet = initWorkBook(filePath);
+    private void readExcel(InputStream is) {
+        HSSFSheet hssfSheet = initWorkBook(is);
         //读取头
         // 将单元格中的内容存入集合
         for (int rowNum = 1; rowNum < hssfSheet.getLastRowNum(); rowNum++) {
@@ -279,13 +277,10 @@ public class Process {
         }
     }
 
-    private static HSSFSheet initWorkBook(String filePath) {
+    private HSSFSheet initWorkBook(InputStream is) {
         HSSFWorkbook workbook = null;
         try {
-            // 读取Excel文件
-            InputStream inputStream = new FileInputStream(filePath);
-            workbook = new HSSFWorkbook(inputStream);
-            inputStream.close();
+            workbook = new HSSFWorkbook(is);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -297,7 +292,7 @@ public class Process {
     /**
      * 设置权重到readHead中
      */
-    private static void setWeight(String clazzName, String aim, double weigths) {
+    private void setWeight(String clazzName, String aim, double weigths) {
         for (int i = 0; i < readhead.getGrade().size(); i++) {
             if (readhead.getGrade().get(i).getClassName().equals(clazzName)) {
                 readhead.getGrade().get(i).getWeigth().put(aim, weigths);
@@ -308,7 +303,7 @@ public class Process {
     /**
      * 根据权重生成数据
      */
-    private static void dealData(List<Student> students) {
+    private void dealData(List<Student> students) {
         //每个学生
         for (Student student : students) {
             student.getGrade().add(new Grade("达成值", 0));
@@ -327,7 +322,7 @@ public class Process {
     /**
      * 模糊算法，先使用新的数据和结构
      */
-    private static void calculate() {
+    private void calculate() {
         int index = 0;
         for (Student student : list) {
             for (Grade gd : student.getGrade()) {
@@ -384,7 +379,7 @@ public class Process {
         }
     }
 
-    private static double getGradeFolder(Grade gd, String keyword, double gradeFolder) {
+    private double getGradeFolder(Grade gd, String keyword, double gradeFolder) {
         if (gd.getWeigth().get(keyword) != null) {
             if (gradeFolder > 40) {
                 gradeFolder = Double.parseDouble(

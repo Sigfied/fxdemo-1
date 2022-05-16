@@ -1,4 +1,4 @@
-package com.example.fxdemo.process;
+package com.nchu.mj.bo;
 
 import java.util.HashMap;
 import java.util.Map;
