@@ -2,16 +2,19 @@ package com.nchu.mj.controller;
 
 
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 
 import com.nchu.mj.service.StudentExcelProcess;
+import org.apache.poi.util.IOUtils;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,7 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ExcelProcessController {
 
     @PostMapping("/excel/process")
-    public ResponseEntity<Resource> hello(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Resource> excelProcess(@RequestParam("file") MultipartFile file) {
         try {
             byte[] bytes = StudentExcelProcess.build().process(file.getBytes());
             HttpHeaders headers = new HttpHeaders();

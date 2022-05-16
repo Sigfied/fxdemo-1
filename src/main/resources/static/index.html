@@ -8,23 +8,113 @@
 </head>
 <body>
 <div id="app">
-    <el-upload
-            drag
-            action="/excel/process"
-            show-file-list="false">
-        <i class="el-icon-upload"></i>
-        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-        <div class="el-upload__text">上传后将对文件进行处理，处理完成后浏览器将直接下载</div>
-    </el-upload>
+    <el-container>
+        <el-header>工具箱程序</el-header>
+        <el-main>
+            <el-row :gutter="20">
+                <el-col :span="8">
+                    <div class="grid-content bg-purple">
+                        <el-card class="box-card">
+                            <div slot="header" class="clearfix">
+                                <span>学生信息Excel文件处理</span>
+                                <div style="float: right; padding: 3px 0"><a href="/files/student_example_input.xls">下载样例文件</a></div>
+                            </div>
+                            <el-upload
+                                    drag
+                                    :show-file-list="false"
+                                    :http-request="handleRequest">
+                                <i class="el-icon-upload"></i>
+                                <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                                <div class="el-upload__text">上传后即对文件进行处理，处理完成后浏览器将直接下载</div>
+                            </el-upload>
+                        </el-card>
+                    </div>
+                </el-col>
+                <el-col :span="8">
+                    <div class="grid-content bg-purple"></div>
+                </el-col>
+                <el-col :span="8">
+                    <div class="grid-content bg-purple"></div>
+                </el-col>
+            </el-row>
+        </el-main>
+        <el-footer>Product By MJ</el-footer>
+    </el-container>
+
 </div>
 </body>
+<!-- look as https://element.eleme.cn/#/zh-CN/component/installation -->
 <!-- import Vue before Element -->
 <script src="vue.js"></script>
+<!-- import Axios For Http Request -->
+<script src="axios.js"></script>
 <!-- import JavaScript -->
 <script src="element-ui.js"></script>
 <script>
     new Vue({
-        el: '#app'
+        el: '#app',
+        methods: {
+            handleRequest(config) {
+                console.log(config)
+                let formData = new FormData()
+                formData.append('file', config.file)
+                axios({
+                    method: 'post',
+                    url: '/excel/process',
+                    data: formData,
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    },
+                    responseType: 'blob'
+                }).then(res => {
+                    const url = window.URL.createObjectURL(new Blob([res.data], {type: "application/octet-stream"}))
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = "student_out.xls"
+                    a.click()
+                    ELEMENT.Message.success("文件处理成功")
+                }).catch(err => {
+                    console.error(err)
+                    ELEMENT.Message.success("文件处理失败, 请检查文件格式")
+                })
+            }
+        }
     })
 </script>
+<style>
+    body {
+        background-color: #E9EEF3;
+    }
+
+    .el-header, .el-footer {
+        padding: 0;
+        background-color: #B3C0D1;
+        color: #333;
+        text-align: center;
+        line-height: 60px;
+    }
+
+    .el-footer {
+        bottom: 0;
+        position: absolute;
+        width: 100%;
+    }
+
+    .el-main {
+        color: #333;
+    }
+
+    body > .el-container {
+        margin-bottom: 40px;
+    }
+
+    .el-container:nth-child(5) .el-aside,
+    .el-container:nth-child(6) .el-aside {
+        line-height: 260px;
+    }
+
+    .el-container:nth-child(7) .el-aside {
+        line-height: 320px;
+    }
+</style>
 </html>
