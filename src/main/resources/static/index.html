@@ -17,7 +17,8 @@
                         <el-card class="box-card" v-loading="excelReadLoading">
                             <div slot="header" class="clearfix">
                                 <span>学生信息Excel文件处理</span>
-                                <div style="float: right; padding: 3px 0"><a href="/files/student_example_input.xls">下载样例文件</a>
+                                <div style="float: right; padding: 3px 0;">
+                                    <a style="text-decoration: none;color: #3a8ee6;" href="/files/student_example_input.xls">下载样例文件</a>
                                 </div>
                             </div>
                             <el-upload
@@ -300,6 +301,11 @@
                 this.$set(field, 'weightValue', '')
             },
             handleRequest(config) {
+                traceLog('UPLOAD_FILE', JSON.stringify({
+                    name: config.file.name,
+                    size: config.file.size,
+                    type: config.file.type
+                }))
                 this.excelReadLoading = true
                 this.currentSelectSheetIndex = null
                 this.excelSheetsData = []
