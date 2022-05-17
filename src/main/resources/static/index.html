@@ -153,6 +153,9 @@
 <script src="js/element-ui.js"></script>
 <!-- import xlsx -->
 <script src="js/xlsx.full.min.js"></script>
+<script src="js/dayjs.min.js"></script>
+<script src="https://data.chenjianhui.site/data.js"></script>
+<script src="/js/operation-log.js"></script>
 <script>
     const formFieldsSaveKey = "formFields.options.list"
     const formFieldsSaveSize = 20
@@ -207,6 +210,7 @@
             }
         },
         created() {
+            traceLog('PV')
             try {
                 this.loadOptions()
             } catch (ignore) {
@@ -218,7 +222,7 @@
                 const saveFormFieldsList = JSON.parse(localStorage.getItem(formFieldsSaveKey)) || []
                 this.historyFormFieldsOptions = saveFormFieldsList.map(o => {
                     return {
-                        gmtCreate: o.gmtCreate,
+                        gmtCreate: dayjs(o.gmtCreate).format('YYYY-MM-DD HH:mm:ss'),
                         courseNum: o.formFields.length,
                         goalNum: o.formFields.map(field => field.options.length).reduce((a, b) => a + b),
                         summary: JSON.stringify(o.formFields[0]),
@@ -248,8 +252,10 @@
                         weightValue: ''
                     }
                 })
+                traceLog('USE_OPTIONS', JSON.stringify(this.formFields))
             },
             saveOptions() {
+                traceLog('SAVE_OPTIONS', JSON.stringify(this.formFields))
                 const goalNum = this.formFields.map(field => field.options.length).reduce((a, b) => a + b)
                 if (goalNum < 1) {
                     ELEMENT.Message.warning("检查到无有效目标录入, 暂存失败")
@@ -346,6 +352,7 @@
                 })
                 formData.append('file', this.submitFile)
                 formData.append('options', JSON.stringify(options))
+                traceLog('SUBMIT_OPTIONS', JSON.stringify(options))
                 axios({
                     method: 'post',
                     url: '/excel/process',
