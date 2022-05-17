@@ -46,7 +46,7 @@
 	</dependencies>
 
 	<build>
-	  <finalName>excel-process-app</finalName>
+	  <finalName>nchu-tools-app</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
