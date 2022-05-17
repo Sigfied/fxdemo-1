@@ -14,10 +14,11 @@
             <el-row :gutter="20">
                 <el-col :span="8">
                     <div class="grid-content bg-purple">
-                        <el-card class="box-card">
+                        <el-card class="box-card" v-loading="excelReadLoading">
                             <div slot="header" class="clearfix">
                                 <span>学生信息Excel文件处理</span>
-                                <div style="float: right; padding: 3px 0"><a href="/files/student_example_input.xls">下载样例文件</a></div>
+                                <div style="float: right; padding: 3px 0"><a href="/files/student_example_input.xls">下载样例文件</a>
+                                </div>
                             </div>
                             <el-upload
                                     drag
@@ -25,9 +26,109 @@
                                     :http-request="handleRequest">
                                 <i class="el-icon-upload"></i>
                                 <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-                                <div class="el-upload__text">上传后即对文件进行处理，处理完成后浏览器将直接下载</div>
+                                <div class="el-upload__text">上传文件后将弹出配置信息输入框</div>
                             </el-upload>
                         </el-card>
+                        <el-dialog
+                                :visible.sync="dialogVisible"
+                                :fullscreen="true"
+                                :show-close="false">
+                            <div slot="title" class="dialog-footer">
+                                <el-row :gutter="20">
+                                    <el-col :span="12">
+                                        <span>配置信息完善</span>
+                                    </el-col>
+                                    <el-col :span="12" style="text-align: right;">
+                                        <el-button @click="dialogVisible = false">关闭</el-button>
+                                        <el-button type="primary" @click="handleSubmit">提交</el-button>
+                                    </el-col>
+                                </el-row>
+                            </div>
+                            <el-row :gutter="20">
+                                <el-col :span="12">
+                                    <el-card header="数据预览">
+                                        <el-tabs v-model="currentSelectSheetIndex" v-if="excelSheetsData && excelSheetsData.length > 0">
+                                            <el-tab-pane v-for="sheet in excelSheetsData" :key="sheet.name"
+                                                         :label="sheet.name">
+                                                <div v-if="sheet.html" v-html="sheet.html"></div>
+                                                <el-empty v-else description="该Sheet页没有任何内容"></el-empty>
+                                            </el-tab-pane>
+                                        </el-tabs>
+                                    </el-card>
+                                </el-col>
+                                <el-col :span="12">
+                                    <el-card>
+                                        <div slot="header">
+                                            <span>配置信息</span>
+                                            <el-popover
+                                                    placement="bottom"
+                                                    width="900"
+                                                    trigger="hover">
+                                                <el-table :data="historyFormFieldsOptions" max-height="400px">
+                                                    <el-table-column width="300" property="gmtCreate"
+                                                                     label="存储时间"></el-table-column>
+                                                    <el-table-column width="100" property="courseNum"
+                                                                     label="总课程数"></el-table-column>
+                                                    <el-table-column width="100" property="goalNum"
+                                                                     label="总目标数"></el-table-column>
+                                                    <el-table-column width="300" property="summary"
+                                                                     label="概要信息"></el-table-column>
+                                                    <el-table-column width="100" label="操作">
+                                                        <template slot-scope="scope">
+                                                            <el-button size="mini" @click="useOptions(scope.row)">使用
+                                                            </el-button>
+                                                        </template>
+                                                    </el-table-column>
+                                                </el-table>
+                                                <el-button slot="reference" style="float: right; padding: 3px 0"
+                                                           type="text"
+                                                           @click="saveOptions">点此暂存配置
+                                                </el-button>
+                                            </el-popover>
+                                        </div>
+                                        <el-form label-width="140px">
+                                            <el-form-item v-for="field in formFields" :label="field.label"
+                                                          :prop="field.prop">
+                                                <el-tag
+                                                        v-for="(tag, index) in field.options"
+                                                        :key="field.prop + index"
+                                                        closable
+                                                        :disable-transitions="false"
+                                                        @close="field.options.splice(index, 1)">
+                                                    {{tag.goalValue}} / {{tag.weightValue}}
+                                                </el-tag>
+                                                <span v-if="field.visible">
+                                        <el-input
+                                                class="input-new-tag"
+                                                placeholder="目标名称"
+                                                v-model="field.goalValue"
+                                                :ref="field.prop"
+                                                size="small"
+                                        >
+                                        </el-input>
+                                        <el-input
+                                                class="input-new-tag"
+                                                placeholder="目标权重"
+                                                v-model="field.weightValue"
+                                                size="small"
+                                        >
+                                        </el-input>
+                                        <el-button class="button-new-tag" size="small"
+                                                   @click="handleInputConfirm(field)"
+                                                   :disabled="!field.goalValue || !/^[1-9][0-9]*([\.][0-9]{1,2})?$/.test(field.weightValue)">
+                                            确定
+                                        </el-button>
+                                    </span>
+                                                <el-button v-else class="button-new-tag" size="small"
+                                                           @click="showInput(field)">
+                                                    + 目标名称与权重
+                                                </el-button>
+                                            </el-form-item>
+                                        </el-form>
+                                    </el-card>
+                                </el-col>
+                            </el-row>
+                        </el-dialog>
                     </div>
                 </el-col>
                 <el-col :span="8">
@@ -48,16 +149,203 @@
 <script src="vue.js"></script>
 <!-- import Axios For Http Request -->
 <script src="axios.js"></script>
-<!-- import JavaScript -->
+<!-- import element ui -->
 <script src="element-ui.js"></script>
+<!-- import xlsx -->
+<script src="xlsx.full.min.js"></script>
 <script>
+    const formFieldsSaveKey = "formFields.options.list"
+    const formFieldsSaveSize = 20
     new Vue({
         el: '#app',
+        watch: {
+            currentSelectSheetIndex(sheetIndex) {
+                if (!this.excelSheetsData || !this.excelSheetsData[sheetIndex]) {
+                    return
+                }
+                const currentSheet = this.excelSheetsData[sheetIndex]
+                const sheetData = currentSheet.data
+                if (sheetData && sheetData.length > 0) {
+                    const formFields = sheetData[0]
+                        .filter(headerItem => headerItem)
+                        .map((headerItem, index) => {
+                            return {
+                                prop: `${index}`,
+                                index: index,
+                                label: headerItem,
+                                visible: false,
+                                goalValue: '',
+                                weightValue: '',
+                                options: []
+                            }
+                        })
+                    formFields.push({
+                        prop: `${formFields.length}`,
+                        index: formFields.length,
+                        label: '达成值',
+                        options: [],
+                        visible: false,
+                        goalValue: '',
+                        weightValue: ''
+                    })
+                    this.formFields = formFields
+                } else {
+                    this.formFields = []
+                }
+            }
+        },
+        data: function () {
+            return {
+                currentSelectSheetIndex: null,
+                excelSheetsData: [],
+                excelReadLoading: false,
+                dialogVisible: false,
+                dialogLoading: false,
+                formFields: [],
+                submitFile: null,
+                historyFormFieldsOptions: []
+            }
+        },
+        created() {
+            try {
+                this.loadOptions()
+            } catch (ignore) {
+                console.error('load options error', ignore)
+            }
+        },
         methods: {
+            loadOptions() {
+                const saveFormFieldsList = JSON.parse(localStorage.getItem(formFieldsSaveKey)) || []
+                this.historyFormFieldsOptions = saveFormFieldsList.map(o => {
+                    return {
+                        gmtCreate: o.gmtCreate,
+                        courseNum: o.formFields.length,
+                        goalNum: o.formFields.map(field => field.options.length).reduce((a, b) => a + b),
+                        summary: JSON.stringify(o.formFields[0]),
+                        formFields: o.formFields.map(field => {
+                            return {
+                                prop: field.prop,
+                                index: field.index,
+                                label: field.label,
+                                options: field.options,
+                                visible: false,
+                                goalValue: '',
+                                weightValue: ''
+                            }
+                        })
+                    }
+                })
+            },
+            useOptions(row) {
+                this.formFields = row.formFields.map(field => {
+                    return {
+                        prop: field.prop,
+                        index: field.index,
+                        label: field.label,
+                        options: field.options,
+                        visible: false,
+                        goalValue: '',
+                        weightValue: ''
+                    }
+                })
+            },
+            saveOptions() {
+                const goalNum = this.formFields.map(field => field.options.length).reduce((a, b) => a + b)
+                if (goalNum < 1) {
+                    ELEMENT.Message.warning("检查到无有效目标录入, 暂存失败")
+                    return
+                }
+                const saveFormFieldsList = JSON.parse(localStorage.getItem(formFieldsSaveKey)) || []
+                if (saveFormFieldsList.length >= formFieldsSaveSize) {
+                    saveFormFieldsList.splice(saveFormFieldsList.length - 1, 1)
+                }
+                saveFormFieldsList.splice(0, 0, {
+                    gmtCreate: new Date(),
+                    formFields: this.formFields.map(field => {
+                        return {
+                            prop: field.prop,
+                            index: field.index,
+                            label: field.label,
+                            options: field.options
+                        }
+                    })
+                })
+                localStorage.setItem(formFieldsSaveKey, JSON.stringify(saveFormFieldsList))
+                ELEMENT.Message.success("配置暂存成功，将保留近二十条暂存配置")
+                this.loadOptions()
+            },
+            showInput(field) {
+                this.$set(field, 'visible', true)
+                this.$nextTick(_ => {
+                    this.$refs[field.prop][0].$refs.input.focus();
+                });
+            },
+            handleInputConfirm(field) {
+                let goalValue = field.goalValue
+                let weightValue = field.weightValue
+                if (goalValue && weightValue) {
+                    field.options.push({
+                        goalValue: goalValue,
+                        weightValue: weightValue
+                    })
+                }
+                this.$set(field, 'visible', false)
+                this.$set(field, 'goalValue', '')
+                this.$set(field, 'weightValue', '')
+            },
             handleRequest(config) {
-                console.log(config)
+                this.excelReadLoading = true
+                this.currentSelectSheetIndex = null
+                this.excelSheetsData = []
+                const fileReader = new FileReader()
+                fileReader.onload = (e) => {
+                    const excelSheetsData = []
+                    const workbook = XLSX.read(e.target.result, {
+                        type: 'binary'
+                    })
+                    for (const sheetIndex in workbook.SheetNames) {
+                        const sheetName = workbook.SheetNames[sheetIndex]
+                        let sheetData = null, sheetHtml = null;
+                        sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+                            header: 1, defval: ''
+                        })
+                        try {
+                            sheetHtml = XLSX.utils.sheet_to_html(workbook.Sheets[sheetName])
+                        } catch (ignore) {
+                        }
+                        excelSheetsData.push({
+                            name: sheetName,
+                            data: sheetData,
+                            html: sheetHtml
+                        })
+                    }
+                    this.excelSheetsData = excelSheetsData
+                    this.currentSelectSheetIndex = 0
+                    this.submitFile = config.file
+                    this.dialogVisible = true
+                    this.excelReadLoading = false
+                };
+                // 以二进制方式打开文件
+                fileReader.readAsBinaryString(config.file);
+            },
+            handleSubmit() {
+                this.dialogLoading = true
                 let formData = new FormData()
-                formData.append('file', config.file)
+                const options = this.formFields.map(field => {
+                    return {
+                        courseName: field.label,
+                        courseForExcelIndex: field.index,
+                        courseGoalNumber: field.options.length,
+                        courseGoalOptionsList: field.options.map(opt => {
+                            return {
+                                aim: opt.goalValue,
+                                weight: opt.weightValue
+                            }
+                        })
+                    }
+                })
+                formData.append('file', this.submitFile)
+                formData.append('options', JSON.stringify(options))
                 axios({
                     method: 'post',
                     url: '/excel/process',
@@ -72,10 +360,19 @@
                     a.href = url
                     a.download = "student_out.xls"
                     a.click()
+                    this.dialogVisible = false
                     ELEMENT.Message.success("文件处理成功")
                 }).catch(err => {
                     console.error(err)
-                    ELEMENT.Message.success("文件处理失败, 请检查文件格式")
+                    ELEMENT.Message.error("文件处理失败, 请检查文件格式")
+                }).finally(() => {
+                    this.submitFile = null
+                    this.excelSheetsData = []
+                    this.formFields = []
+                    this.currentSelectSheetIndex = null
+                    this.excelReadLoading = false
+                    this.dialogVisible = false
+                    this.dialogLoading = false
                 })
             }
         }
@@ -100,6 +397,13 @@
         width: 100%;
     }
 
+    .el-dialog__body {
+        padding: 10px 10px;
+        color: #606266;
+        font-size: 14px;
+        word-break: break-all;
+    }
+
     .el-main {
         color: #333;
     }
@@ -115,6 +419,24 @@
 
     .el-container:nth-child(7) .el-aside {
         line-height: 320px;
+    }
+
+    .el-tag + .el-tag {
+        margin-left: 10px;
+    }
+
+    .button-new-tag {
+        margin-left: 10px;
+        height: 32px;
+        line-height: 30px;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    .input-new-tag {
+        width: 110px;
+        margin-left: 10px;
+        vertical-align: bottom;
     }
 </style>
 </html>
