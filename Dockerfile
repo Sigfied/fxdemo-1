@@ -1,5 +1,5 @@
-FROM java:8
+FROM openjdk:8-jdk-alpine
 # Create app directory
 WORKDIR /usr/src/nchu-tools-app
-COPY target/nchu-tools-app.jar nchu-tools-app.jar
-ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /nchu-tools-app.jar ${0} ${@}"]
+COPY target/*.jar nchu-tools-app.jar
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /usr/src/nchu-tools-app/nchu-tools-app.jar ${0} ${@}"]
