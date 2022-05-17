@@ -1,1 +1,1 @@
-docker run -p 3333:3333 -e "JAVA_OPTS=-Ddebug -Xmx128m" excel-process-app --server.port=3333
+docker run -p 3333:3333 -e "JAVA_OPTS=-Ddebug -Xmx128m" nchu-tools-app --server.port=3333
