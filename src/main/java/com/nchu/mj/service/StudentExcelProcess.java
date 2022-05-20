@@ -182,22 +182,43 @@ public class StudentExcelProcess {
             for (Grade gd : student.getGrade()) {
                 int count = 0;
                 for (Map.Entry<String, Double> entry : gd.getNewGrade().entrySet()) {
-                    if ("达成值".equals(gd.getClassName())) {
-                        count++;
-                        tempCol++;
-                        headCell = hssfRow.createCell(tempCol + 1);
-                        headCell.setCellValue(entry.getValue());
-                        headCell.setCellStyle(cellStyle);
-                    } else if ("理论成绩".equals(gd.getClassName())) {
-                        System.out.println(tempCol - count - 1 + " 理论总评" + entry.getValue());
-                        headCell = hssfRow.createCell(tempCol - count - 1 - 1);
-                        headCell.setCellValue(entry.getValue());
-                        headCell.setCellStyle(cellStyle);
-                    } else {
-                        tempCol++;
-                        headCell = hssfRow.createCell(tempCol);
-                        headCell.setCellValue(entry.getValue());
-                        headCell.setCellStyle(cellStyle);
+                    double tmp = entry.getValue();
+                    if (tmp != 0) {
+                        if ("达成值".equals(gd.getClassName())) {
+                            count++;
+                            tempCol++;
+                            headCell = hssfRow.createCell(tempCol + 1);
+                            headCell.setCellValue(entry.getValue());
+                            headCell.setCellStyle(cellStyle);
+                        } else if ("理论成绩".equals(gd.getClassName())) {
+                            System.out.println(tempCol - count - 1 + " 理论总评" + entry.getValue());
+                            headCell = hssfRow.createCell(tempCol - count - 1 - 1);
+                            headCell.setCellValue(entry.getValue());
+                            headCell.setCellStyle(cellStyle);
+                        } else {
+                            tempCol++;
+                            headCell = hssfRow.createCell(tempCol);
+                            headCell.setCellValue(entry.getValue());
+                            headCell.setCellStyle(cellStyle);
+                        }
+                    }else{
+                        if ("达成值".equals(gd.getClassName())) {
+                            count++;
+                            tempCol++;
+                            headCell = hssfRow.createCell(tempCol + 1);
+                            headCell.setCellValue("");
+                            headCell.setCellStyle(cellStyle);
+                        } else if ("理论成绩".equals(gd.getClassName())) {
+                            System.out.println(tempCol - count - 1 + " 理论总评" + entry.getValue());
+                            headCell = hssfRow.createCell(tempCol - count - 1 - 1);
+                            headCell.setCellValue("");
+                            headCell.setCellStyle(cellStyle);
+                        } else {
+                            tempCol++;
+                            headCell = hssfRow.createCell(tempCol);
+                            headCell.setCellValue("");
+                            headCell.setCellStyle(cellStyle);
+                        }
                     }
                 }
             }
@@ -405,7 +426,9 @@ public class StudentExcelProcess {
         //每个学生
         for (Student student : list) {
             for (Grade gd : student.getGrade()) {
+                double sum = 0;
                 for (String keyword : gd.getNewGrade().keySet()) {
+                    List<String> lastKey = new ArrayList<>(gd.getNewGrade().keySet());
                     if ("折合".equals(gd.getClassName())) {
                         break;
                     }
@@ -416,10 +439,19 @@ public class StudentExcelProcess {
                         break;
                     }
                     double gradeFolder = gd.getNewGrade().get(keyword);
-                    gradeFolder = getGradeFolder(gd, keyword, gradeFolder);
+                    if(!lastKey.get(lastKey.size() -1).equals(keyword)) {
+                        gradeFolder = getGradeFolder(gd, keyword, gradeFolder);
+                        sum += gradeFolder;
+                    }
+                    else {
+                        gradeFolder = gd.getOldGrade() - sum;
+                    }
                     gd.getNewGrade().put(keyword, gradeFolder);
                 }
+
             }
+            student.getGrade().get(index + 3).getNewGrade().put("Grade", student.getGrade().get(index).getOldGrade() * 0.3 + student.getGrade().get(index + 1)
+                    .getOldGrade() * 0.7);
         }
     }
 
@@ -427,22 +459,26 @@ public class StudentExcelProcess {
         if (gd.getWeigth().get(keyword) != null) {
             if (gradeFolder > 40) {
                 gradeFolder = Double.parseDouble(
-                    String.format("%.2f", gradeFolder + Math.random() * gd.getWeigth().get(keyword) * 2.5));
+                    String.format("%.2f", gradeFolder + Math.random() * gd.getWeigth().get(keyword) * 12.5));
             } else {
                 gradeFolder = Double.parseDouble(
-                    String.format("%.2f", gradeFolder - Math.random() * gd.getWeigth().get(keyword) * 2.5));
+                    String.format("%.2f", gradeFolder - Math.random() * gd.getWeigth().get(keyword) * 7.5));
             }
         } else {
-            if (gradeFolder > 30) {
-                gradeFolder = Double.parseDouble(String.format("%.2f", gradeFolder + Math.random() * 0.5 * 2.5));
-            } else {
-                gradeFolder = Double.parseDouble(String.format("%.2f", gradeFolder - Math.random() * 0.5 * 2.5));
+            if(gd.getWeigth().get(keyword) != 1) {
+                if (gradeFolder > 30) {
+                    gradeFolder = Double.parseDouble(String.format("%.2f", gradeFolder + Math.random() * 0.5 * 12.5));
+                } else {
+                    gradeFolder = Double.parseDouble(String.format("%.2f", gradeFolder - Math.random() * 0.5 * 7.5));
+                }
             }
         }
-        return gradeFolder;
+        if(gradeFolder < 0){
+            gradeFolder = gradeFolder + Math.random() * 0.5 * 7.5;
+        }
+        return (int)gradeFolder;
     }
 }
-
 
 
 

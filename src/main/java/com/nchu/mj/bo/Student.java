@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author GYJ
+ */
 public class Student {
     private String no = "";
     private String stuId = "";
@@ -48,10 +51,6 @@ public class Student {
         return grade;
     }
 
-    public void setGrade(ArrayList<Grade> grade) {
-        this.grade = grade;
-    }
-
     public void addOldGrade(Grade grade) {
         this.grade.add(grade);
     }
@@ -80,21 +79,11 @@ public class Student {
             }
         }
         //index为折合在表中的下标，+1为成绩，+2为达成值
-        Map<String, Double> tempWeight = grade.get(index).getWeigth();
-        Map<String, Double> tempGrade = grade.get(index).getNewGrade();
-        Map<String, Double> GradeWeight = grade.get(index + 1).getWeigth();
-        Map<String, Double> GradeGrade = grade.get(index + 1).getNewGrade();
         //遍历达成值的目标
         for (Map.Entry<String, Double> entry : grade.get(index + 2).getWeigth().entrySet()) {
             key = entry.getKey();
             className.add(key);
         }
-        //        double sum = 0;
-        //        for (String name:className) {
-        //            sum += tempGrade.get(name) / tempWeight.get(name) + GradeGrade.get(name) / GradeWeight.get(name);
-        //            sum /= 200;
-        //            grade.get(index + 2).getNewGrade().put(name, Double.valueOf(String.format("%.2f",sum)));
-        //        }
         double sum;
         for (String name : className) {
             sum = 0;
@@ -113,23 +102,35 @@ public class Student {
             }
             grade.get(index + 2).getNewGrade().put(name, Double.valueOf(String.format("%.2f", sum)));
         }
-
+//          Map<String,Double> tempWeight = grade.get(index).getWeigth();
+//        Map<String,Double> tempGrade = grade.get(index).getNewGrade();
+//        Map<String,Double> GradeWeight = grade.get(index+1).getWeigth();
+//        Map<String,Double> GradeGrade = grade.get(index+1).getNewGrade();
+//        //遍历达成值的目标
+//        for (Map.Entry<String, Double> entry : grade.get(index + 2).getWeigth().entrySet()){
+//            key = entry.getKey();
+//            className.add(key);
+//        }
+//        for (String name:className) {
+//            sum = 0;
+//            sum += tempGrade.get(name) / tempWeight.get(name) + GradeGrade.get(name) / GradeWeight.get(name);
+//            sum /= 200;
+//            grade.get(index + 2).getNewGrade().put(name, Double.valueOf(String.format("%.2f", sum)));
+//        }
         //一下为理论总评算法
-        grade.get(index + 3).getNewGrade().put("Grade", grade.get(index).getOldGrade() * 0.3 + grade.get(index + 1)
-            .getOldGrade() * 0.7);
     }
 
     //这个方法得到一个学生的所有数据结构
     public ArrayList<DealDataStructure> createStructure() {
-        ArrayList<DealDataStructure> DealDataStructures = new ArrayList<>();
+        ArrayList<DealDataStructure> dealDataStructures = new ArrayList<>();
         for (Grade gd : grade) {
             if ("折合".equals(gd.getClassName())) { break; } else {
                 for (String key : gd.getWeigth().keySet()) {
-                    DealDataStructures.add(new DealDataStructure(gd.getClassName(), key, gd.getWeigth().get(key),
+                    dealDataStructures.add(new DealDataStructure(gd.getClassName(), key, gd.getWeigth().get(key),
                         gd.getNewGrade().get(key)));
                 }
             }
         }
-        return DealDataStructures;
+        return dealDataStructures;
     }
 }

@@ -53,7 +53,7 @@ public class Grade {
     //生成学生的分成绩
     public void createData() {
         for (Map.Entry<String, Double> entry : weigth.entrySet()) {
-            String key = entry.getKey().toString();
+            String key = entry.getKey();
             double value = entry.getValue();
             newGrade.put(key, value * oldGrade);
         }

@@ -11,7 +11,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="excel-process-app" target="1.8" />
+      <module name="excel-process-app" target="8" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
