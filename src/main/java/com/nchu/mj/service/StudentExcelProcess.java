@@ -191,7 +191,7 @@ public class StudentExcelProcess {
                             headCell.setCellValue(entry.getValue());
                             headCell.setCellStyle(cellStyle);
                         } else if ("理论成绩".equals(gd.getClassName())) {
-                            System.out.println(tempCol - count - 1 + " 理论总评" + entry.getValue());
+                            //System.out.println(tempCol - count - 1 + " 理论总评" + entry.getValue());
                             headCell = hssfRow.createCell(tempCol - count - 2 );
                             headCell.setCellValue(entry.getValue());
                             headCell.setCellStyle(cellStyle);
@@ -387,6 +387,7 @@ public class StudentExcelProcess {
 
     /**
      * 模糊算法，先使用新的数据和结构
+     * 计算了折合
      */
     private void calculate() {
         int index = 0;
@@ -399,30 +400,6 @@ public class StudentExcelProcess {
             }
             //每个学生
             //每个aim
-            List<DealDataStructure> listNew = student.createStructure();
-            double sum = 0;
-            double count = 0;
-            double weightFolder;
-            double gradeFolder;
-            //折合每个weight
-            for (String keyword : student.getGrade().get(index).getWeigth().keySet()) {
-                //折合每个权重
-                weightFolder = student.getGrade().get(index).getWeigth().get(keyword);
-                //折合每个结果值
-                gradeFolder = student.getGrade().get(index).getNewGrade().get(keyword);
-                for (DealDataStructure ds : listNew) {
-                    if (ds.aim.equals(keyword)) {
-                        count++;
-                        sum += (ds.grade / ds.weight);
-                    }
-                }
-                sum /= count;
-                sum *= weightFolder;
-                if (Math.abs(sum - gradeFolder) < 1.2) {
-                    sum = (int)sum;
-                    student.getGrade().get(index).getNewGrade().put(keyword, sum);
-                }
-            }
         }
         //每个学生
         for (Student student : list) {
@@ -453,6 +430,32 @@ public class StudentExcelProcess {
             }
             student.getGrade().get(index + 3).getNewGrade().put("Grade", student.getGrade().get(index).getOldGrade() * 0.3 + student.getGrade().get(index + 1)
                     .getOldGrade() * 0.7);
+            List<DealDataStructure> listNew = student.createStructure();
+            double sum = 0;
+            double count ;
+            double weightFolder;
+            double gradeFolder;
+            //折合每个weight
+            for (String keyword : student.getGrade().get(index).getWeigth().keySet()) {
+                sum = 0;
+                count = 0;
+                //折合每个权重
+                weightFolder = student.getGrade().get(index).getWeigth().get(keyword);
+                //折合每个结果值
+                gradeFolder = student.getGrade().get(index).getNewGrade().get(keyword);
+                for (DealDataStructure ds : listNew) {
+                    if (ds.aim.equals(keyword)) {
+                        count++;
+                        sum = sum + (ds.grade / ds.weight);
+                    }
+                }
+                sum /= count;
+                sum *= weightFolder;
+                sum = (int)sum;
+                //System.out.println(keyword+"个数"+count+"折合\t"+sum);
+                student.getGrade().get(index).getNewGrade().put(keyword, sum);
+            }
+            student.culReach();
         }
     }
 
@@ -476,6 +479,9 @@ public class StudentExcelProcess {
         }
         if(gradeFolder < 0){
             gradeFolder = gradeFolder + Math.random() * 0.5 * 7.5;
+        }
+        if(gradeFolder >= 100 * gd.getWeigth().get(keyword)){
+            gradeFolder-=2;
         }
         return (int)gradeFolder;
     }

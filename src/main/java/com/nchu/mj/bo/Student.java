@@ -67,6 +67,7 @@ public class Student {
 
     /**
      * 生成达成值和理论总评的成绩
+     * 计算达成值
      */
     public void culReach() {
         String key;
@@ -80,47 +81,28 @@ public class Student {
         }
         //index为折合在表中的下标，+1为成绩，+2为达成值
         //遍历达成值的目标
-        for (Map.Entry<String, Double> entry : grade.get(index + 2).getWeigth().entrySet()) {
+        double sum = 0;
+        Map<String,Double> tempWeight = grade.get(index).getWeigth();
+        Map<String,Double> tempGrade = grade.get(index).getNewGrade();
+        Map<String,Double> GradeWeight = grade.get(index+1).getWeigth();
+        Map<String,Double> GradeGrade = grade.get(index+1).getNewGrade();
+        Map<String, Double> achieveValue = grade.get(index + 2).getWeigth();
+        List<Double> achieveValueDouble = new ArrayList<>(achieveValue.values());
+        //遍历达成值的目标
+        for (Map.Entry<String, Double> entry : grade.get(index).getWeigth().entrySet()){
             key = entry.getKey();
             className.add(key);
         }
-        double sum;
-        for (String name : className) {
+        for (String name:className) {
             sum = 0;
-            int count = index;
-            for (int i = 0; i < index; i++) {
-                if (grade.get(i).getNewGrade().get(name) != null) {
-                    sum += grade.get(i).getNewGrade().get(name) / grade.get(i).getWeigth().get(name);
-                } else {
-                    count--;
-                }
-            }
-            if (count == index) {
-                sum = sum / index / 100;
-            } else {
-                sum = sum / count / 100;
-            }
+            //System.out.println(tempGrade.get(name) +"/"+100 * tempWeight.get(name) +"*" +achieveValueDouble.get(0)+"+"+GradeGrade.get(name) +"/"+100 * GradeGrade.get(name) +"*" +achieveValueDouble.get(1) );
+            sum += tempGrade.get(name) / (100 * tempWeight.get(name)) * achieveValueDouble.get(0) + GradeGrade.get(name) / (100* GradeWeight.get(name)) * achieveValueDouble.get(1);
             grade.get(index + 2).getNewGrade().put(name, Double.valueOf(String.format("%.2f", sum)));
         }
-//          Map<String,Double> tempWeight = grade.get(index).getWeigth();
-//        Map<String,Double> tempGrade = grade.get(index).getNewGrade();
-//        Map<String,Double> GradeWeight = grade.get(index+1).getWeigth();
-//        Map<String,Double> GradeGrade = grade.get(index+1).getNewGrade();
-//        //遍历达成值的目标
-//        for (Map.Entry<String, Double> entry : grade.get(index + 2).getWeigth().entrySet()){
-//            key = entry.getKey();
-//            className.add(key);
-//        }
-//        for (String name:className) {
-//            sum = 0;
-//            sum += tempGrade.get(name) / tempWeight.get(name) + GradeGrade.get(name) / GradeWeight.get(name);
-//            sum /= 200;
-//            grade.get(index + 2).getNewGrade().put(name, Double.valueOf(String.format("%.2f", sum)));
-//        }
         //一下为理论总评算法
     }
 
-    //这个方法得到一个学生的所有数据结构
+    /**这个方法得到一个学生的所有数据结构*/
     public ArrayList<DealDataStructure> createStructure() {
         ArrayList<DealDataStructure> dealDataStructures = new ArrayList<>();
         for (Grade gd : grade) {

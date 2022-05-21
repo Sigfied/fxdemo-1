@@ -3,6 +3,9 @@ package com.nchu.mj.bo;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author GYJ,FLZ
+ */
 public class Grade {
     private String className = "";
     private double oldGrade = 0;
@@ -38,23 +41,18 @@ public class Grade {
         return weigth;
     }
 
-    public void setWeigth(Map<String, Double> weigth) {
-        this.weigth = weigth;
-    }
-
     public Map<String, Double> getNewGrade() {
         return newGrade;
     }
 
-    public void setNewGrade(Map<String, Double> newGrade) {
-        this.newGrade = newGrade;
-    }
-
-    //生成学生的分成绩
+    /**生成学生的分成绩*/
     public void createData() {
         for (Map.Entry<String, Double> entry : weigth.entrySet()) {
             String key = entry.getKey();
             double value = entry.getValue();
+            if("折合".equals(className)){
+                newGrade.put(key, 0.0);
+            }
             newGrade.put(key, value * oldGrade);
         }
     }
