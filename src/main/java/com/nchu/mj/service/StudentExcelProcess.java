@@ -22,6 +22,7 @@ import org.apache.poi.ss.usermodel.HorizontalAlignment;
 /**
  * 学生信息 Excel 处理器
  * StudentExcelProcess.build().process(anyFileStream)
+ * @author cjh,gyj
  */
 public class StudentExcelProcess {
     private Student readhead = new Student("0", "", "");
@@ -42,7 +43,6 @@ public class StudentExcelProcess {
             for (int k = 0; k < matchOptions.getCourseGoalNumber(); k++) {
                 String aim = matchOptions.getCourseGoalOptionsList().get(k).getAim();
                 double weight = matchOptions.getCourseGoalOptionsList().get(k).getWeight();
-                System.out.println(aim + "\t" + weight);
                 setWeight(readhead.getGrade().get(i).getClassName(), aim, weight);
             }
         }
