@@ -192,9 +192,10 @@ public class StudentExcelProcess {
                             headCell.setCellStyle(cellStyle);
                         } else if ("理论成绩".equals(gd.getClassName())) {
                             System.out.println(tempCol - count - 1 + " 理论总评" + entry.getValue());
-                            headCell = hssfRow.createCell(tempCol - count - 1 - 1);
+                            headCell = hssfRow.createCell(tempCol - count - 2 );
                             headCell.setCellValue(entry.getValue());
                             headCell.setCellStyle(cellStyle);
+                            tempCol++;
                         } else {
                             tempCol++;
                             headCell = hssfRow.createCell(tempCol);
