@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import com.nchu.mj.bo.DealDataStructure;
 import com.nchu.mj.bo.Grade;
@@ -460,20 +461,24 @@ public class StudentExcelProcess {
     }
 
     private double getGradeFolder(Grade gd, String keyword, double gradeFolder) {
+        double flag = Math.random();
+        Random random = new Random();
+        double x = flag > 0.4 ? random.nextFloat() * 12.5 : random.nextFloat() * (-12.5);
+        double y = flag > 0.4 ? random.nextFloat() * 7.5 : random.nextFloat() * (-7.5);
         if (gd.getWeigth().get(keyword) != null) {
-            if (gradeFolder > 40) {
+            if (gradeFolder > 35) {
                 gradeFolder = Double.parseDouble(
-                    String.format("%.2f", gradeFolder + Math.random() * gd.getWeigth().get(keyword) * 12.5));
+                    String.format("%.2f", gradeFolder +  gd.getWeigth().get(keyword) * x));
             } else {
                 gradeFolder = Double.parseDouble(
-                    String.format("%.2f", gradeFolder - Math.random() * gd.getWeigth().get(keyword) * 7.5));
+                    String.format("%.2f", gradeFolder + gd.getWeigth().get(keyword) * y));
             }
         } else {
             if(gd.getWeigth().get(keyword) != 1) {
                 if (gradeFolder > 30) {
-                    gradeFolder = Double.parseDouble(String.format("%.2f", gradeFolder + Math.random() * 0.5 * 12.5));
+                    gradeFolder = Double.parseDouble(String.format("%.2f", gradeFolder + x ));
                 } else {
-                    gradeFolder = Double.parseDouble(String.format("%.2f", gradeFolder - Math.random() * 0.5 * 7.5));
+                    gradeFolder = Double.parseDouble(String.format("%.2f", gradeFolder + y  ));
                 }
             }
         }
