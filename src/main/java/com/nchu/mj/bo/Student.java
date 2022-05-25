@@ -95,8 +95,7 @@ public class Student {
         }
         for (String name:className) {
             sum = 0;
-            //System.out.println(tempGrade.get(name) +"/"+100 * tempWeight.get(name) +"*" +achieveValueDouble.get(0)+"+"+GradeGrade.get(name) +"/"+100 * GradeGrade.get(name) +"*" +achieveValueDouble.get(1) );
-            sum += tempGrade.get(name) / (100 * tempWeight.get(name)) * achieveValueDouble.get(0) + GradeGrade.get(name) / (100* GradeWeight.get(name)) * achieveValueDouble.get(1);
+            sum += tempGrade.get(name) / (100 * tempWeight.get(name)) * achieveValueDouble.get(1) + GradeGrade.get(name) / (100* GradeWeight.get(name)) * achieveValueDouble.get(0);
             grade.get(index + 2).getNewGrade().put(name, Double.valueOf(String.format("%.2f", sum)));
         }
         //一下为理论总评算法

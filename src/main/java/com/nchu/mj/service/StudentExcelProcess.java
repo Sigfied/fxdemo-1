@@ -274,7 +274,7 @@ public class StudentExcelProcess {
         HSSFSheet hssfSheet = initWorkBook(fileBytes);
         //读取头
         // 将单元格中的内容存入集合
-        for (int rowNum = 1; rowNum < hssfSheet.getLastRowNum(); rowNum++) {
+        for (int rowNum = 1; rowNum <= hssfSheet.getLastRowNum(); rowNum++) {
             HSSFRow hssfRow = hssfSheet.getRow(rowNum);
             if (hssfRow == null) {
                 continue;
@@ -406,29 +406,9 @@ public class StudentExcelProcess {
         for (Student student : list) {
             for (Grade gd : student.getGrade()) {
                 double sum = 0;
-                for (String keyword : gd.getNewGrade().keySet()) {
-                    List<String> lastKey = new ArrayList<>(gd.getNewGrade().keySet());
-                    if ("折合".equals(gd.getClassName())) {
-                        break;
-                    }
-                    if ("成绩".equals(gd.getClassName())) {
-                        break;
-                    }
-                    if ("达成值".equals(gd.getClassName())) {
-                        break;
-                    }
-                    double gradeFolder = gd.getNewGrade().get(keyword);
-                    if(!lastKey.get(lastKey.size() -1).equals(keyword)) {
-                        gradeFolder = getGradeFolder(gd, keyword, gradeFolder);
-                        sum += gradeFolder;
-                    }
-                    else {
-                        gradeFolder = gd.getOldGrade() - sum;
-                    }
-                    gd.getNewGrade().put(keyword, gradeFolder);
-                }
-
+                createGrade(gd, sum);
             }
+
             student.getGrade().get(index + 3).getNewGrade().put("Grade", student.getGrade().get(index).getOldGrade() * 0.3 + student.getGrade().get(index + 1)
                     .getOldGrade() * 0.7);
             List<DealDataStructure> listNew = student.createStructure();
@@ -453,10 +433,51 @@ public class StudentExcelProcess {
                 sum /= count;
                 sum *= weightFolder;
                 sum = (int)sum;
-                //System.out.println(keyword+"个数"+count+"折合\t"+sum);
                 student.getGrade().get(index).getNewGrade().put(keyword, sum);
             }
             student.culReach();
+        }
+    }
+
+    /**
+     * 这里使用了递归的方法。
+     * 通过之前的逻辑判断，当出现最后一个权值拆分后分数比超过100%时，进行递归
+     * 重新计算拆分
+     * */
+    private void createGrade(Grade gd, double sum) {
+        //count表示拆分1的个数
+        int count = 0;
+        for (String keyword : gd.getNewGrade().keySet()) {
+            List<String> lastKey = new ArrayList<>(gd.getNewGrade().keySet());
+            if ("折合".equals(gd.getClassName())) {
+                break;
+            }
+            if ("成绩".equals(gd.getClassName())) {
+                break;
+            }
+            if ("达成值".equals(gd.getClassName())) {
+                break;
+            }
+            double gradeFolder = gd.getNewGrade().get(keyword);
+            if(!lastKey.get(lastKey.size() -1).equals(keyword)) {
+                gradeFolder = getGradeFolder(gd, keyword, gradeFolder);
+                if(gradeFolder >= 100 * gd.getWeigth().get(keyword)){
+                    gradeFolder = 100 * gd.getWeigth().get(keyword);
+                }
+                sum += gradeFolder;
+                count++;
+            }
+            else {
+                gradeFolder = gd.getOldGrade() - sum;
+                count++;
+                if(gradeFolder < 0){
+                    gradeFolder = gd.getOldGrade() * count - sum;
+                }
+                if(gradeFolder > 100 * gd.getWeigth().get(keyword)){
+                    createGrade(gd,0);
+                }
+            }
+            gd.getNewGrade().put(keyword, gradeFolder);
         }
     }
 
