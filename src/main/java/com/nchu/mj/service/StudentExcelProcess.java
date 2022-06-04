@@ -193,6 +193,7 @@ public class StudentExcelProcess {
                             headCell.setCellStyle(cellStyle);
                         } else if ("理论成绩".equals(gd.getClassName())) {
                             //System.out.println(tempCol - count - 1 + " 理论总评" + entry.getValue());
+                            System.out.println(tempCol + "count"+count);
                             headCell = hssfRow.createCell(tempCol - count - 2 );
                             headCell.setCellValue(entry.getValue());
                             headCell.setCellStyle(cellStyle);
@@ -472,20 +473,66 @@ public class StudentExcelProcess {
                 count++;
                 if(gradeFolder < 0){
                     gradeFolder = gd.getOldGrade() * count - sum;
+                    if(gradeFolder < 0){
+                        createGrade_1(gd,0);
+                        return;
+                    }
                 }
                 if(gradeFolder > 100 * gd.getWeigth().get(keyword)){
-                    createGrade(gd,0);
+                    createGrade_1(gd,0);
+                    return;
                 }
             }
             gd.getNewGrade().put(keyword, gradeFolder);
         }
     }
 
+    private void createGrade_1(Grade gd, double sum) {
+        //count表示拆分1的个数
+        int count = 0;
+        for (String keyword : gd.getNewGrade().keySet()) {
+            List<String> lastKey = new ArrayList<>(gd.getNewGrade().keySet());
+            if ("折合".equals(gd.getClassName())) {
+                break;
+            }
+            if ("成绩".equals(gd.getClassName())) {
+                break;
+            }
+            if ("达成值".equals(gd.getClassName())) {
+                break;
+            }
+            double gradeFolder = gd.getNewGrade().get(keyword);
+            if(!lastKey.get(lastKey.size() -1).equals(keyword)) {
+                gradeFolder = getGradeFolder(gd, keyword, gradeFolder);
+                if(gradeFolder >= 100 * gd.getWeigth().get(keyword)){
+                    gradeFolder = 100 * gd.getWeigth().get(keyword);
+                }
+                sum += gradeFolder;
+                count++;
+            }
+            else {
+                gradeFolder = gd.getOldGrade() - sum;
+                count++;
+                if(gradeFolder < 0){
+                    gradeFolder = gd.getOldGrade() * count - sum;
+                }
+                if(gradeFolder > 100 * gd.getWeigth().get(keyword)){
+                    return;
+                }
+            }
+            gd.getNewGrade().put(keyword, gradeFolder);
+        }
+    }
+
+
     private double getGradeFolder(Grade gd, String keyword, double gradeFolder) {
         double flag = Math.random();
         Random random = new Random();
         double x = flag > 0.4 ? random.nextFloat() * 12.5 : random.nextFloat() * (-12.5);
         double y = flag > 0.4 ? random.nextFloat() * 7.5 : random.nextFloat() * (-7.5);
+        if(gd.getOldGrade() == 0 ){
+            return 0;
+        }
         if (gd.getWeigth().get(keyword) != null) {
             if (gradeFolder > 35) {
                 gradeFolder = Double.parseDouble(
@@ -504,10 +551,7 @@ public class StudentExcelProcess {
             }
         }
         if(gradeFolder < 0){
-            gradeFolder = gradeFolder + Math.random() * 0.5 * 7.5;
-        }
-        if(gradeFolder >= 100 * gd.getWeigth().get(keyword)){
-            gradeFolder-=2;
+            gradeFolder = 0;
         }
         return (int)gradeFolder;
     }
